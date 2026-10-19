@@ -2,7 +2,7 @@
 
 مصادقة ثنائية محلية لـ **WHM وcPanel**، بواجهة عربية وQR وإدارة لحماية حسابات الريسيلر وعملائه.
 
-الإصدار: **2.1.1**. المستودع عام ويمكن تنزيله عبر HTTPS دون حساب GitHub أو مفتاح SSH. لا توجد خدمة OTP خارجية أو اشتراك SMS.
+الإصدار: **2.1.2**. المستودع عام ويمكن تنزيله عبر HTTPS دون حساب GitHub أو مفتاح SSH. لا توجد خدمة OTP خارجية أو اشتراك SMS.
 
 > إضافة أمنية مخصصة، وليست منتجًا معتمدًا من cPanel أو بديلًا عن معالجة اختراق الخادم. جرّبها على بيئة اختبار أولًا، واحتفظ بجلسة root عبر SSH مفتوحة أثناء التثبيت والاختبار.
 
@@ -19,12 +19,14 @@
 
 ## المتطلبات والتوافق
 
-- Linux مع WHM/cPanel **126 أو أحدث** وواجهة **Jupiter**، بشرط اجتياز فحص الواجهات الأصلية.
+- Linux مع WHM/cPanel وواجهة **Jupiter**، بشرط اجتياز فحص الواجهات الأصلية وأدوات تسجيل الإضافات.
 - Python **3.9+** وPerl المرفق مع cPanel. لا يحتاج تشغيل الإضافة إلى `pip install`.
 - صلاحية root عبر SSH، وGit لتنزيل المستودع.
 - خدمة cpsrvd تعمل وتدعم graceful reload، والوحدات الأصلية اللازمة متاحة، ومنها `Cpanel::Session::Restore` و`Cpanel::TimeHiRes`.
 
-الاختبار الفعلي للمكونات وتدفقات الدخول جرى على cPanel 134 / CloudLinux 9. دعم 126–132 **أولي** في 2.1.1: نجح فحص تحميل الوحدات والساعة الأصلي على 126.0.78 / CloudLinux 9.7 / Python 3.9.21، لكن لم تُختبر تدفقات الدخول الفعلية عليه بعد. فحص الواجهات الموسع واختبارات الحزمة لا يثبتان وحدهما توافق الدخول؛ اختبر على بيئة اختبار أولًا واحتفظ بجلسة root SSH مفتوحة. يفحص المثبّت المتطلبات ويرفض التركيب غير المدعوم قبل تغيير الإعدادات، ولا يحاول إصلاح ملفات cPanel أو الترخيص أو وقت الخادم.
+**التوافق تلقائي بحسب القدرات، وليس ضمانًا لكل الإصدارات:** منذ 2.1.2 لا يرفض المثبّت الخادم بسبب حد أدنى ثابت لرقم cPanel؛ يفحص الوحدات وطرقها المطلوبة والساعة الأصلية وJupiter وأدوات التسجيل ودعم التحميل السلس والأذونات والحالة. غياب أي متطلب يوقف التثبيت قبل تغيير إعدادات الإضافة. لا يثبت Python ولا يغير الثيم أو الترخيص أو ملفات cPanel لإجبار التوافق. الثيمات الأخرى مثل Paper Lantern وMeridian ليست مدعومة في هذه الحزمة، وكذلك أي إصدار يفتقد الواجهات المطلوبة.
+
+نطاق التحقق الفعلي: اختُبرت المكونات وتدفقات الدخول على cPanel 134 / CloudLinux 9. وعلى 126.0.78 / CloudLinux 9.7 / Python 3.9.21 نجح الفحص الموسع و146 اختبارًا أصليًا وأبلغ المستخدم عن نجاح تثبيت 2.1.1 مع graceful reload؛ لم نتلقّ بعد تأكيد تدفقات الدخول الفعلية وQR عليه. الإصدارات الأخرى غير مختبرة فعليًا، حتى لو اجتازت فحص القدرات. اختبارات الإصدارات المحاكاة لا تعادل خوادم cPanel حقيقية. اختبر على بيئة اختبار أولًا واحتفظ بجلسة root SSH مفتوحة.
 
 ## التثبيت بأوامر SSH
 
@@ -35,9 +37,10 @@
 نفّذ كـroot:
 
 ```bash
-git clone --branch v2.1.1 --single-branch https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator &&
+git clone --branch v2.1.2 --single-branch https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator &&
 cd /root/takeyourhost-authenticator &&
 bash /root/takeyourhost-authenticator/install.sh --dry-run &&
+bash /root/takeyourhost-authenticator/scripts/test-cpanel.sh &&
 bash /root/takeyourhost-authenticator/install.sh --yes
 ```
 
@@ -51,7 +54,22 @@ git -C /root/takeyourhost-authenticator describe --tags --exact-match
 head -n 8 /root/takeyourhost-authenticator/install.sh
 ```
 
-الإصدار المتوقع `v2.1.1` (أو إصدار قديم تعرف أنك نزلته)، ويجب أن يستدعي الملف `python3 scripts/manage.py install`. لا تتابع إذا ظهرت ملفات مختلفة. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
+الإصدار المتوقع `v2.1.2` (أو إصدار قديم تعرف أنك نزلته)، ويجب أن يستدعي الملف `python3 scripts/manage.py install`. لا تتابع إذا ظهرت ملفات مختلفة. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
+
+### تنزيل سابق دون تثبيت
+
+إذا تأكدت أن المجلد هو مستودع هذه الإضافة ولم تثبتها بعد، لا تكرر `git clone`:
+
+```bash
+cd /root/takeyourhost-authenticator &&
+git fetch origin tag v2.1.2 &&
+git checkout v2.1.2 &&
+bash /root/takeyourhost-authenticator/install.sh --dry-run &&
+bash /root/takeyourhost-authenticator/scripts/test-cpanel.sh &&
+bash /root/takeyourhost-authenticator/install.sh --yes
+```
+
+إذا كانت الإضافة مثبتة بالفعل بواسطة المثبّت، استخدم أوامر **التحديث** أدناه، لا `install.sh`.
 
 إذا كان Git أو Python غير مثبتين، ثبتهما أولًا عبر مدير الحزم المناسب؛ المثبّت لا يضيف حزم نظام من تلقاء نفسه.
 
@@ -108,14 +126,17 @@ head -n 8 /root/takeyourhost-authenticator/install.sh
 
 ```bash
 cd /root/takeyourhost-authenticator &&
-NEW_VERSION=v2.1.1 &&
-git fetch origin --tags &&
+NEW_VERSION=v2.1.2 &&
+git fetch origin tag "$NEW_VERSION" &&
 git checkout "$NEW_VERSION" &&
 bash /root/takeyourhost-authenticator/update.sh --dry-run &&
+bash /root/takeyourhost-authenticator/scripts/test-cpanel.sh &&
 bash /root/takeyourhost-authenticator/update.sh --yes
 ```
 
 التحديث لا يكتب فوق ملفات مفاتيح المستخدمين أو يعيد تفعيل إضافة أوقفتها من اللوحة. سيرفض الملفات المثبتة المعدّلة محليًا بدل استبدالها بصمت. لا تستخدم `git reset --hard` للتخلص من تعديلاتك.
+
+بعد التثبيت أو التحديث: افتح صفحة الإضافة في WHM وcPanel، واختبر QR وتسجيل الدخول والخروج من نافذة خاصة لحساب اختبار قبل تعميم التفعيل. احفظ رموز الاسترداد ولا تغلق جلسة SSH أثناء التحقق. نجاح المثبّت أو اختبارات المكونات ليس دليلًا بمفرده على نجاح واجهة الدخول.
 
 ## الحالة والاسترداد عبر SSH
 

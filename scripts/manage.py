@@ -70,12 +70,17 @@ class Manager:
         return r
     def preflight(self,action):
         if os.name!='posix' or os.geteuid()!=0:raise RuntimeError('Run on Linux as root over SSH')
+        if sys.version_info<(3,9):raise RuntimeError('Python 3.9 or newer required; no system packages were changed')
         version=self.path('/usr/local/cpanel/version')
         if not version.is_file() or not self.perl.is_file():raise RuntimeError('cPanel is not installed')
-        m=re.search(r'(?:^|\s)11\.(\d+)\.',version.read_text())
-        if not m or int(m[1])<126:raise RuntimeError('Requires cPanel 126 or newer with compatible native interfaces; see README for tested scope')
-        if int(m[1])<134:print('NOTICE: cPanel 126-132 compatibility is provisional; native module checks do not replace login-flow testing. Keep root SSH open.',file=sys.stderr)
+        m=re.fullmatch(r'\s*(?:11\.)?([1-9]\d*)\.\d+(?:\.\d+)*\s*',version.read_text())
+        if not m:raise RuntimeError('Cannot identify cPanel version; native compatibility must be reviewed')
+        self.cpanel_major=int(m[1])
+        print(f'NOTICE: cPanel {self.cpanel_major}: checking native capabilities, not a fixed version minimum. Login-flow verification is still required. Keep root SSH open.',file=sys.stderr)
         if not self.path('/usr/local/cpanel/base/frontend/jupiter').is_dir():raise RuntimeError('Jupiter theme required')
+        for name,executable in [('bin/register_appconfig',True),('bin/unregister_appconfig',True),('scripts/install_plugin',False),('scripts/uninstall_plugin',False)]:
+            helper=self.path('/usr/local/cpanel/'+name)
+            if not helper.is_file() or (executable and not os.access(helper,os.X_OK)):raise RuntimeError(f'Required native plugin helper unavailable: {name}')
         for f in [self.package/'VERSION',self.package/'take-mfa.conf',self.package/'cpanel/install.json',self.package/'scripts/native.pl',*(src for src,_ in self.files.values())]:
             if not f.is_file() or f.is_symlink():raise RuntimeError(f'Missing or symlinked package file: {f.name}')
         if not re.fullmatch(r'\d+\.\d+\.\d+\s*',(self.package/'VERSION').read_text()):raise RuntimeError('Invalid package version')

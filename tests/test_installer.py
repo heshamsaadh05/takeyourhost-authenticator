@@ -114,20 +114,43 @@ class LinuxPreflight(unittest.TestCase):
             self.manager.path(path).mkdir(parents=True)
         self.manager.path('/usr/local/cpanel/version').write_text('11.134.0.63')
         m.atomic_bytes(self.manager.perl,b'fake perl, never executed',0o755)
+        for name in ['bin/register_appconfig','bin/unregister_appconfig','scripts/install_plugin','scripts/uninstall_plugin']:
+            m.atomic_bytes(self.manager.path('/usr/local/cpanel/'+name),b'fake native helper, never executed',0o755)
         pid=1234;self.manager.path('/var/run').mkdir(parents=True);self.manager.path('/var/run/cpsrvd.pid').write_text(str(pid))
         self.manager.path('/proc/1234').mkdir(parents=True);self.manager.path('/proc/1234/status').write_text('SigCgt:\t'+format(1<<(signal_number()-1),'x'))
     def test_valid_preflight_creates_no_state(self):
         self.assertIsNone(self.manager.preflight('install'));self.assertFalse(self.manager.state.exists())
-    def test_old_cpanel_rejected_without_state(self):
-        self.manager.path('/usr/local/cpanel/version').write_text('11.124.0.1')
-        with self.assertRaisesRegex(RuntimeError,'126'):self.manager.preflight('install')
-        self.assertFalse(self.manager.state.exists())
+    def test_version_does_not_override_native_capabilities(self):
+        for version in ['11.110.0.1','11.124.0.1','11.132.0.1','11.134.0.63','11.138.0.1','140.0.1']:
+            with self.subTest(version=version):
+                self.manager.path('/usr/local/cpanel/version').write_text(version)
+                self.assertIsNone(self.manager.preflight('install'));self.assertFalse(self.manager.state.exists())
     def test_cpanel_126_native_capability_path_creates_no_state(self):
         self.manager.path('/usr/local/cpanel/version').write_text('11.126.0.78')
         self.assertIsNone(self.manager.preflight('install'));self.assertFalse(self.manager.state.exists())
     def test_malformed_version_rejected(self):
         self.manager.path('/usr/local/cpanel/version').write_text('unknown')
-        with self.assertRaisesRegex(RuntimeError,'Requires cPanel'):self.manager.preflight('install')
+        with self.assertRaisesRegex(RuntimeError,'Cannot identify cPanel'):self.manager.preflight('install')
+    def test_missing_native_helper_refused_without_state(self):
+        self.manager.path('/usr/local/cpanel/scripts/install_plugin').unlink()
+        with self.assertRaisesRegex(RuntimeError,'helper unavailable'):self.manager.preflight('install')
+        self.assertFalse(self.manager.state.exists())
+    def test_missing_native_interface_refused_without_state(self):
+        original=self.manager.native
+        def native(action,value=None):
+            if action=='preflight':raise RuntimeError('Missing native interface')
+            return original(action,value)
+        self.manager.native=native
+        with self.assertRaisesRegex(RuntimeError,'Missing native interface'):self.manager.preflight('install')
+        self.assertFalse(self.manager.state.exists())
+    def test_missing_supported_theme_refused_without_state(self):
+        self.manager.path('/usr/local/cpanel/base/frontend/jupiter').rmdir()
+        with self.assertRaisesRegex(RuntimeError,'Jupiter'):self.manager.preflight('install')
+        self.assertFalse(self.manager.state.exists())
+    def test_python_below_39_refused_without_state(self):
+        with mock.patch.object(m.sys,'version_info',(3,8,20)):
+            with self.assertRaisesRegex(RuntimeError,'Python 3.9'):self.manager.preflight('install')
+        self.assertFalse(self.manager.state.exists())
     def test_legacy_install_not_overwritten(self):
         dest=next(iter(self.manager.files));m.atomic_bytes(dest,b'legacy user file',0o644)
         with self.assertRaisesRegex(RuntimeError,'Existing file refused'):self.manager.preflight('install')
