@@ -2,7 +2,7 @@
 
 مصادقة ثنائية محلية لـ **WHM وcPanel**، بواجهة عربية وQR وإدارة لحماية حسابات الريسيلر وعملائه.
 
-الإصدار: **2.1.0**. المستودع خاص؛ تحتاج صلاحية GitHub لتنزيله. لا توجد خدمة OTP خارجية أو اشتراك SMS.
+الإصدار: **2.1.0**. المستودع عام ويمكن تنزيله عبر HTTPS دون حساب GitHub أو مفتاح SSH. لا توجد خدمة OTP خارجية أو اشتراك SMS.
 
 > إضافة أمنية مخصصة، وليست منتجًا معتمدًا من cPanel أو بديلًا عن معالجة اختراق الخادم. جرّبها على بيئة اختبار أولًا، واحتفظ بجلسة root عبر SSH مفتوحة أثناء التثبيت والاختبار.
 
@@ -28,28 +28,30 @@
 
 ## التثبيت بأوامر SSH
 
-### 1. الوصول للمستودع الخاص
+### 1. التثبيت الجديد من المستودع العام
 
-استخدم مفتاح SSH مخوّلًا بالقراءة للمستودع؛ يفضّل **Deploy key بصلاحية قراءة فقط** لكل خادم. أضفه من إعدادات المستودع إذا لم يكن لديك وصول جاهز. تحقق من هوية مضيف GitHub عند أول اتصال؛ لا تعطّل فحص مفتاح المضيف.
+استخدم رابط HTTPS التالي؛ لا تحتاج إلى إعداد مفاتيح SSH أو إدخال بيانات GitHub لتنزيل المستودع العام. احتفظ بجلسة SSH مفتوحة، وراجع المتطلبات أعلاه أولًا.
 
 نفّذ كـroot:
 
 ```bash
-git clone --branch v2.1.0 git@github.com:heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator
-cd /root/takeyourhost-authenticator
-bash install.sh --dry-run
-bash install.sh --yes
+git clone --branch v2.1.0 --single-branch https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator &&
+cd /root/takeyourhost-authenticator &&
+bash /root/takeyourhost-authenticator/install.sh --dry-run &&
+bash /root/takeyourhost-authenticator/install.sh --yes
 ```
 
-لا تنفّذ أمر التثبيت إذا فشل `--dry-run`. الخيار `--yes` يتجاوز سؤال التأكيد التفاعلي فقط، ولا يتجاوز فحوص الأمان أو التوافق.
+انسخ الكتلة كاملة؛ تربط `&&` الخطوات بحيث يتوقف التنفيذ إذا فشل التنزيل أو الانتقال للمجلد أو الفحص. يُستخدم مسار المُثبّت الكامل لتجنب تشغيل ملف `install.sh` آخر، مثل مُثبّت SitePad الموجود في `/root`. لا تنفّذ أمر التثبيت إذا فشل `--dry-run`. الخيار `--yes` يتجاوز سؤال التأكيد التفاعلي فقط، ولا يتجاوز فحوص الأمان أو التوافق.
 
-بديل HTTPS إذا لم تستخدم مفتاح SSH:
+إذا كان مجلد التنزيل موجودًا من محاولة سابقة، سيتوقف `git clone` دون تشغيل المُثبّت. لا تحذفه أو تستبدله تلقائيًا؛ افحصه أولًا:
 
 ```bash
-git clone --branch v2.1.0 https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator
+git -C /root/takeyourhost-authenticator status --short
+git -C /root/takeyourhost-authenticator describe --tags --exact-match
+head -n 8 /root/takeyourhost-authenticator/install.sh
 ```
 
-عند طلب بيانات GitHub استخدم طريقة مصادقة مخوّلة للوصول للمستودع الخاص. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
+الإصدار المتوقع `v2.1.0`، ويجب أن يستدعي الملف `python3 scripts/manage.py install`. لا تتابع إذا ظهرت ملفات مختلفة. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
 
 إذا كان Git أو Python غير مثبتين، ثبتهما أولًا عبر مدير الحزم المناسب؛ المثبّت لا يضيف حزم نظام من تلقاء نفسه.
 
@@ -105,12 +107,12 @@ git clone --branch v2.1.0 https://github.com/heshamsaadh05/takeyourhost-authenti
 اختر إصدارًا موثوقًا وراجع تغييراته، ثم بدّل قيمة `NEW_VERSION` بالإصدار المطلوب:
 
 ```bash
-cd /root/takeyourhost-authenticator
-NEW_VERSION=v2.1.0
-git fetch origin --tags
-git checkout "$NEW_VERSION"
-bash update.sh --dry-run
-bash update.sh --yes
+cd /root/takeyourhost-authenticator &&
+NEW_VERSION=v2.1.0 &&
+git fetch origin --tags &&
+git checkout "$NEW_VERSION" &&
+bash /root/takeyourhost-authenticator/update.sh --dry-run &&
+bash /root/takeyourhost-authenticator/update.sh --yes
 ```
 
 التحديث لا يكتب فوق ملفات مفاتيح المستخدمين أو يعيد تفعيل إضافة أوقفتها من اللوحة. سيرفض الملفات المثبتة المعدّلة محليًا بدل استبدالها بصمت. لا تستخدم `git reset --hard` للتخلص من تعديلاتك.
@@ -136,9 +138,9 @@ python3 scripts/manage.py status
 ## الإزالة مع الاحتفاظ ببيانات العوامل
 
 ```bash
-cd /root/takeyourhost-authenticator
-bash uninstall.sh --dry-run
-bash uninstall.sh --yes
+cd /root/takeyourhost-authenticator &&
+bash /root/takeyourhost-authenticator/uninstall.sh --dry-run &&
+bash /root/takeyourhost-authenticator/uninstall.sh --yes
 ```
 
 تزيل السياسة والروابط وملفات الإضافة، وتحتفظ بمجلد `/var/cpanel/take-mfa` ونسخ الأمان. **بعد الإزالة لا تعود الإضافة تفرض المصادقة المخصصة**؛ احتفاظها بالمفاتيح لا يعني استمرار الحماية. لا تغيّر المصادقة الأصلية أو كلمات المرور أو المواقع.
@@ -165,10 +167,22 @@ bash scripts/test-cpanel.sh
 
 هذه الاختبارات تستعمل حالة مؤقتة ولا تُنشئ حسابات استضافة أو تغيّر عامل مستخدم حقيقي. اختبارات GitHub Actions لا تمثل خادم cPanel فعليًا؛ اختبارات المثبّت تستخدم وجهات مؤقتة وأوامر cPanel مُحاكاة.
 
+## التطوير والتواصل
+
+### المبرمج — هشام سعد
+
+- الهاتف: [+201028566646](tel:+201028566646)
+- Facebook: [heshamsaad.h](https://www.facebook.com/heshamsaad.h)
+
+### الشركة القائمة بالتطوير والإصدار — TakeYourHost
+
+- الموقع الرسمي: [takeyourhost.com](https://takeyourhost.com)
+- Contact Us / التواصل والدعم: [فتح تذكرة دعم](https://takeyourhost.com/submitticket.php)
+
+عند طلب الدعم أرسل إصدار cPanel والإضافة ورسالة الخطأ بعد إخفاء البيانات الحساسة. لا تنشر كلمات المرور أو مفاتيح API أو QR أو مفاتيح المصادقة أو رموز الاسترداد في Issues العامة.
+
 ## مراجع
 
 - [تسجيل إضافات WHM عبر AppConfig](https://api.docs.cpanel.net/guides/guide-to-whm-plugins/guide-to-whm-plugins-appconfig-registration)
 - [تسجيل إضافات cPanel](https://api.docs.cpanel.net/guides/guide-to-cpanel-plugins/guide-to-cpanel-plugins-add-plugins)
-- [مفاتيح Deploy Keys في GitHub](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys)
-- [بصمات مضيف GitHub](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)
 - [إشعارات الطرف الثالث](THIRD_PARTY_NOTICES.md)
