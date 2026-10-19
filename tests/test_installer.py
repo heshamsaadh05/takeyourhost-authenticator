@@ -119,9 +119,15 @@ class LinuxPreflight(unittest.TestCase):
     def test_valid_preflight_creates_no_state(self):
         self.assertIsNone(self.manager.preflight('install'));self.assertFalse(self.manager.state.exists())
     def test_old_cpanel_rejected_without_state(self):
-        self.manager.path('/usr/local/cpanel/version').write_text('11.132.0.1')
-        with self.assertRaisesRegex(RuntimeError,'134'):self.manager.preflight('install')
+        self.manager.path('/usr/local/cpanel/version').write_text('11.124.0.1')
+        with self.assertRaisesRegex(RuntimeError,'126'):self.manager.preflight('install')
         self.assertFalse(self.manager.state.exists())
+    def test_cpanel_126_native_capability_path_creates_no_state(self):
+        self.manager.path('/usr/local/cpanel/version').write_text('11.126.0.78')
+        self.assertIsNone(self.manager.preflight('install'));self.assertFalse(self.manager.state.exists())
+    def test_malformed_version_rejected(self):
+        self.manager.path('/usr/local/cpanel/version').write_text('unknown')
+        with self.assertRaisesRegex(RuntimeError,'Requires cPanel'):self.manager.preflight('install')
     def test_legacy_install_not_overwritten(self):
         dest=next(iter(self.manager.files));m.atomic_bytes(dest,b'legacy user file',0o644)
         with self.assertRaisesRegex(RuntimeError,'Existing file refused'):self.manager.preflight('install')

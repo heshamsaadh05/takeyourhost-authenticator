@@ -2,7 +2,7 @@
 
 مصادقة ثنائية محلية لـ **WHM وcPanel**، بواجهة عربية وQR وإدارة لحماية حسابات الريسيلر وعملائه.
 
-الإصدار: **2.1.0**. المستودع عام ويمكن تنزيله عبر HTTPS دون حساب GitHub أو مفتاح SSH. لا توجد خدمة OTP خارجية أو اشتراك SMS.
+الإصدار: **2.1.1**. المستودع عام ويمكن تنزيله عبر HTTPS دون حساب GitHub أو مفتاح SSH. لا توجد خدمة OTP خارجية أو اشتراك SMS.
 
 > إضافة أمنية مخصصة، وليست منتجًا معتمدًا من cPanel أو بديلًا عن معالجة اختراق الخادم. جرّبها على بيئة اختبار أولًا، واحتفظ بجلسة root عبر SSH مفتوحة أثناء التثبيت والاختبار.
 
@@ -19,12 +19,12 @@
 
 ## المتطلبات والتوافق
 
-- Linux مع WHM/cPanel **134 أو أحدث** وواجهة **Jupiter**.
+- Linux مع WHM/cPanel **126 أو أحدث** وواجهة **Jupiter**، بشرط اجتياز فحص الواجهات الأصلية.
 - Python **3.9+** وPerl المرفق مع cPanel. لا يحتاج تشغيل الإضافة إلى `pip install`.
 - صلاحية root عبر SSH، وGit لتنزيل المستودع.
 - خدمة cpsrvd تعمل وتدعم graceful reload، والوحدات الأصلية اللازمة متاحة، ومنها `Cpanel::Session::Restore` و`Cpanel::TimeHiRes`.
 
-الاختبار الفعلي للمكونات وتدفقات الدخول جرى على cPanel 134 / CloudLinux 9. لم يُثبت التوافق الفعلي مع جميع إصدارات وتوزيعات cPanel الأخرى. يفحص المثبّت المتطلبات ويرفض التركيب غير المدعوم قبل تغيير الإعدادات، ولا يحاول إصلاح ملفات cPanel أو الترخيص أو وقت الخادم.
+الاختبار الفعلي للمكونات وتدفقات الدخول جرى على cPanel 134 / CloudLinux 9. دعم 126–132 **أولي** في 2.1.1: نجح فحص تحميل الوحدات والساعة الأصلي على 126.0.78 / CloudLinux 9.7 / Python 3.9.21، لكن لم تُختبر تدفقات الدخول الفعلية عليه بعد. فحص الواجهات الموسع واختبارات الحزمة لا يثبتان وحدهما توافق الدخول؛ اختبر على بيئة اختبار أولًا واحتفظ بجلسة root SSH مفتوحة. يفحص المثبّت المتطلبات ويرفض التركيب غير المدعوم قبل تغيير الإعدادات، ولا يحاول إصلاح ملفات cPanel أو الترخيص أو وقت الخادم.
 
 ## التثبيت بأوامر SSH
 
@@ -35,7 +35,7 @@
 نفّذ كـroot:
 
 ```bash
-git clone --branch v2.1.0 --single-branch https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator &&
+git clone --branch v2.1.1 --single-branch https://github.com/heshamsaadh05/takeyourhost-authenticator.git /root/takeyourhost-authenticator &&
 cd /root/takeyourhost-authenticator &&
 bash /root/takeyourhost-authenticator/install.sh --dry-run &&
 bash /root/takeyourhost-authenticator/install.sh --yes
@@ -51,7 +51,7 @@ git -C /root/takeyourhost-authenticator describe --tags --exact-match
 head -n 8 /root/takeyourhost-authenticator/install.sh
 ```
 
-الإصدار المتوقع `v2.1.0`، ويجب أن يستدعي الملف `python3 scripts/manage.py install`. لا تتابع إذا ظهرت ملفات مختلفة. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
+الإصدار المتوقع `v2.1.1` (أو إصدار قديم تعرف أنك نزلته)، ويجب أن يستدعي الملف `python3 scripts/manage.py install`. لا تتابع إذا ظهرت ملفات مختلفة. **لا تضع PAT أو كلمة مرور في الرابط أو داخل أمر shell، ولا ترسلها في المحادثات.** لا تستخدم `curl | bash` أو تشغّل سكربتًا لم تراجعه.
 
 إذا كان Git أو Python غير مثبتين، ثبتهما أولًا عبر مدير الحزم المناسب؛ المثبّت لا يضيف حزم نظام من تلقاء نفسه.
 
@@ -108,7 +108,7 @@ head -n 8 /root/takeyourhost-authenticator/install.sh
 
 ```bash
 cd /root/takeyourhost-authenticator &&
-NEW_VERSION=v2.1.0 &&
+NEW_VERSION=v2.1.1 &&
 git fetch origin --tags &&
 git checkout "$NEW_VERSION" &&
 bash /root/takeyourhost-authenticator/update.sh --dry-run &&

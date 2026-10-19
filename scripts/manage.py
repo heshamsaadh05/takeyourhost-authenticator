@@ -73,7 +73,8 @@ class Manager:
         version=self.path('/usr/local/cpanel/version')
         if not version.is_file() or not self.perl.is_file():raise RuntimeError('cPanel is not installed')
         m=re.search(r'(?:^|\s)11\.(\d+)\.',version.read_text())
-        if not m or int(m[1])<134:raise RuntimeError('Requires cPanel 134 or newer; only 134/CloudLinux 9 has been live-tested')
+        if not m or int(m[1])<126:raise RuntimeError('Requires cPanel 126 or newer with compatible native interfaces; see README for tested scope')
+        if int(m[1])<134:print('NOTICE: cPanel 126-132 compatibility is provisional; native module checks do not replace login-flow testing. Keep root SSH open.',file=sys.stderr)
         if not self.path('/usr/local/cpanel/base/frontend/jupiter').is_dir():raise RuntimeError('Jupiter theme required')
         for f in [self.package/'VERSION',self.package/'take-mfa.conf',self.package/'cpanel/install.json',self.package/'scripts/native.pl',*(src for src,_ in self.files.values())]:
             if not f.is_file() or f.is_symlink():raise RuntimeError(f'Missing or symlinked package file: {f.name}')

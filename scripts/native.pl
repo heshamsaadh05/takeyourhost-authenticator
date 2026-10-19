@@ -6,11 +6,28 @@ use JSON::PP ();
 my $action=shift(@ARGV)//'';
 die "Root required\n" if $>!=0;
 if($action eq 'preflight'){
-    for my $module(qw(Cpanel::TimeHiRes Cpanel::Crypt::Utils Cpanel::Rand::Get Cpanel::Session::Restore Cpanel::Security::Authn::TwoFactorAuth::Google Cpanel::SecurityPolicy::Base Cpanel::Admin::Base Cpanel::LiveAPI Cpanel::AdminBin::Call Cpanel::Config::CpConfGuard Cpanel::ServiceManager::Services::Cpsrvd)){
+    for my $module(qw(Cpanel::TimeHiRes Cpanel::Crypt::Utils Cpanel::Rand::Get Cpanel::Session::Restore Cpanel::Session::Load Cpanel::Security::Authn::TwoFactorAuth::Google Cpanel::SecurityPolicy::Base Cpanel::Admin::Base Cpanel::LiveAPI Cpanel::AdminBin::Call Cpanel::Config::CpConfGuard Cpanel::Config::LoadCpConf Cpanel::Config::LoadCpUserFile Cpanel::ServiceManager::Services::Cpsrvd)){
         eval "require $module;1" or die "Required module unavailable: $module\n";
     }
     die "Missing native session restore\n" unless Cpanel::Session::Restore->can('restoreSession');
     die "Missing real-time clock\n" unless Cpanel::TimeHiRes->can('time');
+    my %interfaces=(
+        'Cpanel::Crypt::Utils'=>[qw(eq_secure)],
+        'Cpanel::Rand::Get'=>[qw(getranddata)],
+        'Cpanel::Security::Authn::TwoFactorAuth::Google'=>[qw(new generate_code)],
+        'Cpanel::Session::Load'=>[qw(loadSession)],
+        'Cpanel::SecurityPolicy::Base'=>[qw(init)],
+        'Cpanel::Admin::Base'=>[qw(_allowed_parents get_caller_username)],
+        'Cpanel::AdminBin::Call'=>[qw(call)],
+        'Cpanel::LiveAPI'=>[qw(new)],
+        'Cpanel::Config::LoadCpUserFile'=>[qw(loadcpuserfile)],
+        'Cpanel::Config::LoadCpConf'=>[qw(loadcpconf)],
+        'Cpanel::Config::CpConfGuard'=>[qw(new set save release_lock)],
+        'Cpanel::ServiceManager::Services::Cpsrvd'=>[qw(new restart_gracefully)],
+    );
+    for my $module(sort keys %interfaces){
+        for my $method(@{$interfaces{$module}}){die "Missing native interface: $module\::$method\n" unless $module->can($method);}
+    }
     print JSON::PP::encode_json({ok=>1,time=>Cpanel::TimeHiRes::time()});
 }elsif($action eq 'get-policy'){
     require Cpanel::Config::LoadCpConf;
