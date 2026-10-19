@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.log
+*.zip
+*.tar.gz
+.env
+.env.*
+*.key
+*.pem
+*identities*.json
+state/
+backups/
+.venv/

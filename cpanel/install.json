@@ -1,0 +1,3 @@
+[
+  {"id":"take_mfa","name":"TakeYourHost Authenticator","type":"link","uri":"take_mfa/index.live.pl","group_id":"security","order":99,"icon":"take-mfa.svg","target":"_self","featuremanager":0,"description":"Two-factor authentication for cPanel and WHM"}
+]
